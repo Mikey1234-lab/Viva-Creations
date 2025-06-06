@@ -18,6 +18,9 @@ import AccessDenied from './pages/AccessDenied';
 import SignupLogin from './pages/SignupLogin';
 import UserTypeSelection from './pages/UserTypeSelection';
 import AssetsPage from './pages/AssetsPage';
+import StartupDashboard from './pages/StartupDashboard';
+import InvestorDashboard from './pages/InvestorDashboard';
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
@@ -46,8 +49,17 @@ function App() {
             <Route path="/selection" element={<UserTypeSelection />} />
             <Route path="/auth" element={<SignupLogin />} />
             <Route path="/access-denied" element={<AccessDenied />} />
-            {/* Catch all route for undefined paths */}
-            <Route path="*" element={<Navigate to="/\" replace />} />
+            <Route path="/startup-dashboard" element={
+              <PrivateRoute>
+                <StartupDashboard />
+              </PrivateRoute>
+            } />
+            <Route path="/investor-dashboard" element={
+              <PrivateRoute>
+                <InvestorDashboard />
+              </PrivateRoute>
+            } />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <Footer />
         </div>
