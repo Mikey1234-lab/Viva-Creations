@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 type FormMode = 'signin' | 'signup';
 
@@ -13,6 +14,7 @@ interface FormData {
 
 const SignupLogin: React.FC = () => {
     const navigate = useNavigate();
+    const { signup, login } = useAuth();
     const [mode, setMode] = useState<FormMode>('signin');
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState<FormData>({
@@ -21,23 +23,36 @@ const SignupLogin: React.FC = () => {
         password: '',
     });
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string>('');
 
     const userType = localStorage.getItem('userType') || 'user';
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        setError('');
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setError('');
 
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            if (mode === 'signup') {
+                await signup(formData.email, formData.password, userType, {
+                    name: formData.name,
+                });
+                navigate(userType === 'startup' ? '/startup-dashboard' : '/investor-dashboard');
+            } else {
+                await login(formData.email, formData.password);
+                navigate(userType === 'startup' ? '/startup-dashboard' : '/investor-dashboard');
+            }
+        } catch (err: any) {
+            setError(err.message || 'An error occurred during authentication');
+        } finally {
             setLoading(false);
-            navigate('/access-denied');
-        }, 1500);
+        }
     };
 
     const containerVariants = {
@@ -62,6 +77,7 @@ const SignupLogin: React.FC = () => {
 
     const toggleMode = () => {
         setMode(mode === 'signin' ? 'signup' : 'signin');
+        setError('');
     };
 
     return (
@@ -88,6 +104,16 @@ const SignupLogin: React.FC = () => {
                         </span>
                     </p>
                 </motion.div>
+
+                {error && (
+                    <motion.div
+                        className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm text-center"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                    >
+                        {error}
+                    </motion.div>
+                )}
 
                 <motion.form
                     onSubmit={handleSubmit}
@@ -138,7 +164,7 @@ const SignupLogin: React.FC = () => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 required
-                                className="w-full bg-dark-700 border border-gray-600 rounded-lg py-3 pl-10 pr-4 text-black placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                                className="w-full bg-dark-700 border border-gray-600 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
                                 placeholder="example@email.com"
                             />
                         </div>
@@ -162,7 +188,7 @@ const SignupLogin: React.FC = () => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 required
-                                className="w-full bg-dark-700 border border-gray-600 rounded-lg py-3 pl-10 pr-10 text-black placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                                className="w-full bg-dark-700 border border-gray-600 rounded-lg py-3 pl-10 pr-10 text-white placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
                                 placeholder="••••••••"
                             />
                             <button
